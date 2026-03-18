@@ -1,13 +1,127 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  STUDENT
+  TUTOR
+  ADMIN
+}
+
+enum BookingStatus {
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(STUDENT)
+  isBanned  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tutorProfile TutorProfile?
+
+  bookingsAsStudent Booking[] @relation("StudentBookings")
+  bookingsAsTutor   Booking[] @relation("TutorBookings")
+
+  reviewsAsStudent Review[] @relation("StudentReviews")
+  reviewsAsTutor   Review[] @relation("TutorReviews")
+
+  @@index([role])
+  @@index([isBanned])
+}
+
+model TutorProfile {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @unique @db.Uuid
+  bio          String
+  hourlyRate   Int
+  rating       Float    @default(0)
+  totalReviews Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjects     TutorProfileCategory[]
+  availability Availability[]
+}
+
+model Category {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tutorProfiles TutorProfileCategory[]
+}
+
+model TutorProfileCategory {
+  tutorProfileId String @db.Uuid
+  categoryId     String @db.Uuid
+
+  tutorProfile TutorProfile @relation(fields: [tutorProfileId], references: [id], onDelete: Cascade)
+  category     Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([tutorProfileId, categoryId])
+  @@index([categoryId])
+}
+
+model Booking {
+  id        String        @id @default(uuid()) @db.Uuid
+  studentId String        @db.Uuid
+  tutorId   String        @db.Uuid
+  date      DateTime
+  startTime DateTime
+  endTime   DateTime
+  status    BookingStatus @default(CONFIRMED)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  student User @relation("StudentBookings", fields: [studentId], references: [id], onDelete: Restrict)
+  tutor   User @relation("TutorBookings", fields: [tutorId], references: [id], onDelete: Restrict)
+
+  @@index([studentId])
+  @@index([tutorId])
+  @@index([status])
+  @@index([date])
+}
+
+model Review {
+  id        String   @id @default(uuid()) @db.Uuid
+  studentId String   @db.Uuid
+  tutorId   String   @db.Uuid
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  student User @relation("StudentReviews", fields: [studentId], references: [id], onDelete: Restrict)
+  tutor   User @relation("TutorReviews", fields: [tutorId], references: [id], onDelete: Restrict)
+
+  @@index([studentId])
+  @@index([tutorId])
+}
+
+model Availability {
+  id        String   @id @default(uuid()) @db.Uuid
+  tutorId   String   @db.Uuid
+  dayOfWeek Int
+  startTime DateTime
+  endTime   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tutor TutorProfile @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+
+  @@index([tutorId])
+  @@index([dayOfWeek])
 }
