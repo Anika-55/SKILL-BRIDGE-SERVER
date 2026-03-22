@@ -6,6 +6,7 @@ import authRoutes from "./modules/auth/auth.routes";
 import adminRoutes from "./modules/admin/admin.routes";
 import tutorRoutes from "./modules/tutor/tutor.routes";
 import bookingRoutes from "./modules/booking/booking.routes";
+import reviewRoutes from "./modules/review/review.routes";
 import { HttpError } from "./utils/httpError";
 
 const app = express();
@@ -26,6 +27,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api", tutorRoutes);
 app.use("/api", bookingRoutes);
+app.use("/api", reviewRoutes);
 
 // Not found handler
 app.use((_req: Request, res: Response) => {
