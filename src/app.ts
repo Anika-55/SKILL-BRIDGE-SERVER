@@ -5,6 +5,7 @@ import morgan from "morgan";
 import authRoutes from "./modules/auth/auth.routes";
 import adminRoutes from "./modules/admin/admin.routes";
 import tutorRoutes from "./modules/tutor/tutor.routes";
+import bookingRoutes from "./modules/booking/booking.routes";
 import { HttpError } from "./utils/httpError";
 
 const app = express();
@@ -24,6 +25,7 @@ app.get("/api/health", (_req: Request, res: Response) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api", tutorRoutes);
+app.use("/api", bookingRoutes);
 
 // Not found handler
 app.use((_req: Request, res: Response) => {
